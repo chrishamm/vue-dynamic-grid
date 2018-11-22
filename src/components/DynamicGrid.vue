@@ -37,7 +37,7 @@ import VueGridLayout from 'vue-grid-layout'
 const breakpoints = [ "xs", "sm", "md", "lg", "xl" ];
 const inheritedGridItemProperties = ["minW", "minH", "maxW", "maxH"];
 
-let itemKey = 1, itemsToAdd = [];
+let itemsToAdd = [];
 
 // Get the requested size from an object or at least a deserialized fallback option
 function getDescriptor(item, size) {
@@ -83,6 +83,7 @@ export default {
 		return {
 			gridItems: [],
 			isReady: false,
+			itemKey: 1,
 			items: [],
 			layouts: {
 				xs: [],
@@ -129,7 +130,7 @@ export default {
 			}
 
 			this.items.push({
-				key: itemKey++,
+				key: this.itemKey++,
 				settings,
 				settingsLoaded: false
 			});
@@ -193,7 +194,7 @@ export default {
 			breakpoints.forEach(function(size) {
 				this.layouts[size] = [];
 			}, this);
-			itemKey = 1;
+			this.itemKey = 1;
 		},
 		load(items) {
 			this.clear();
@@ -260,7 +261,7 @@ export default {
 
 			this.gridItems.push(slot);
 			this.items.push({
-				key: itemKey++,
+				key: this.itemKey++,
 				settings: slot.componentOptions.propsData.settings,
 				settingsLoaded: false
 			});
