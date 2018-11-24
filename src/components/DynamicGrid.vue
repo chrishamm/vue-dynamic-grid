@@ -69,10 +69,10 @@ export default {
 	},
 	computed: {
 		layout: {
-			get() { return this.responsive ? this.layouts[this.size] : this.layouts.md; },
+			get() { return this.responsive ? this.layouts[this.currentSize] : this.layouts.md; },
 			set(value) {
 				if (this.responsive) {
-					this.layouts[this.size] = value;
+					this.layouts[this.currentSize] = value;
 				} else {
 					this.layout.md = value;
 				}
@@ -81,6 +81,7 @@ export default {
 	},
 	data() {
 		return {
+			currentSize: this.size,
 			gridItems: [],
 			isReady: false,
 			itemKey: 1,
@@ -92,11 +93,14 @@ export default {
 				lg: [],
 				xl: []
 			},
-			selectedItem: null,
-			size: "md"
+			selectedItem: null
 		}
 	},
 	props: {
+		autoResize: {
+			type: Boolean,
+			default: true
+		},
 		editing: {
 			type: Boolean,
 			default: false
@@ -108,6 +112,10 @@ export default {
 		responsive: {
 			type: Boolean,
 			default: true
+		},
+		size: {
+			type: String,
+			default: 'md'
 		}
 	},
 	watch: {
@@ -233,14 +241,15 @@ export default {
 		},
 		registerBreakpoint(condition, size) {
 			if (window.matchMedia(condition).matches) {
-				this.size = size;
+				this.currentSize = size;
+				this.$emit("update:size", size);
 			}
 
 			const me = this;
 			window.matchMedia(condition).addListener(function(query) {
 				if (query.matches) {
-					me.size = size;
-					me.$emit("sizeChanged", size);
+					me.currentSize = size;
+					me.$emit("update:size", size);
 				}
 			});
 		}
@@ -267,13 +276,15 @@ export default {
 			});
 		}, this);
 
-		// Make sure this component becomes responsive. See Element-UI breakpoints for further information.
-		// Unfortunately we cannot use the "responsive" prop of the GridLayout because that messes up the rendering during resizes
-		this.registerBreakpoint("(max-width: 767px)", "xs");
-		this.registerBreakpoint("(min-width: 768px) and (max-width: 991px)", "sm");
-		this.registerBreakpoint("(min-width: 992px) and (max-width: 1199px)", "md");
-		this.registerBreakpoint("(min-width: 1200px) and (max-width: 1919px)", "lg");
-		this.registerBreakpoint("(min-width: 1920px)", "xl");
+		// Make sure this component becomes responsive. See Bootstrap 4 breakpoints for further information.
+		// Unfortunately we cannot use the "responsive" prop of the GridLayout because that is too buggy
+		if (this.autoResize) {
+			this.registerBreakpoint("(max-width: 575px)", "xs");
+			this.registerBreakpoint("(min-width: 576px) and (max-width: 767px)", "sm");
+			this.registerBreakpoint("(min-width: 768px) and (max-width: 959px)", "md");
+			this.registerBreakpoint("(min-width: 960px) and (max-width: 1199px)", "lg");
+			this.registerBreakpoint("(min-width: 1200px)", "xl");
+		}
 	},
 	render(createElement) {
 		// FIXME See note in addElement()

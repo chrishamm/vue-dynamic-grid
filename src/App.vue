@@ -50,7 +50,7 @@
 		</div>
 
 		<h2>Grid Container:</h2>
-		<dynamic-grid ref="grid" :editing="editing" @sizeChanged="sizeChanged">
+		<dynamic-grid ref="grid" :editing="editing" :size.sync="windowSize" :autoResize="true">
 			<dynamic-grid-item :md="[0, 0, 8, 4]" settings="created via static template">
 				<dummy-div>
 					<!-- Components must remain empty if save+load are supposted to be used. We don't support recursive reconstruction, so use settings+props instead -->
@@ -71,8 +71,6 @@ import './Dummies.js'
 
 export default {
 	mounted() {
-		this.windowSize = this.$refs.grid.size;
-
 		// This add call is as minimalist as possible
 		this.$refs.grid.addElement("dummy-div", { md: [ 8, 0, 8, 4] }, "created programatically on load");
 	},
@@ -128,9 +126,6 @@ export default {
 		load() {
 			// This also invokes load(settings) on the child components where applicable
 			this.$refs.grid.load(this.storedLayout);
-		},
-		sizeChanged(size) {
-			this.windowSize = size;
 		}
 	}
 }
