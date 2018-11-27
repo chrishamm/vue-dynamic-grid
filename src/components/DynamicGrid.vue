@@ -35,7 +35,6 @@
 import VueGridLayout from 'vue-grid-layout'
 
 const breakpoints = [ "xs", "sm", "md", "lg", "xl" ];
-const inheritedGridItemProperties = ["minW", "minH", "maxW", "maxH"];
 
 let itemsToAdd = [];
 
@@ -183,6 +182,10 @@ export default {
 					w: descriptor[2],
 					h: descriptor[3],
 					i: this.layouts[size].length,
+					minW: 1,
+					maxW: Infinity,
+					minH: 1,
+					maxH: Infinity
 				});
 			}, this);
 
@@ -255,11 +258,6 @@ export default {
 					const descriptor = this.layouts[size][index];
 					item.layouts[size] = [ descriptor.x, descriptor.y, descriptor.w, descriptor.h ];
 				}, this);
-				inheritedGridItemProperties.forEach(function(prop) {
-					if (gridItem.componentOptions.propsData.hasOwnProperty(prop)) {
-						item.layouts[prop] = gridItem.componentOptions.propsData[prop];
-					}
-				});
 
 				if (child.componentOptions.propsData !== undefined) {
 					item.childProps = child.componentOptions.propsData;
@@ -296,7 +294,11 @@ export default {
 					y: descriptor[1],
 					w: descriptor[2],
 					h: descriptor[3],
-					i: index
+					i: index,
+					minW: slot.componentOptions.propsData.minW || 1,
+					maxW: slot.componentOptions.propsData.maxW || Infinity,
+					minH: slot.componentOptions.propsData.minH || 1,
+					maxH: slot.componentOptions.propsData.maxH || Infinity
 				});
 			}, this);
 
@@ -350,25 +352,8 @@ export default {
 				},
 			},
 			this.gridItems.map(function(gridItem, index) {
-				// Bind layout values and inherit layout properties
-				const layout = this.layout[index];
-				let props = {
-					x: layout.x,
-					y: layout.y,
-					w: layout.w,
-					h: layout.h,
-					i: index
-				};
-
-				const gridItemProps = gridItem.componentOptions.propsData;
-				for(let key in gridItemProps) {
-					if (inheritedGridItemProperties.indexOf(key) != -1) {
-						props[key] = gridItemProps[key];
-					}
-				}
-
 				// Render replacement for virtual grid item component
-				const item = this.items[index];
+				const item = this.items[index], layout = this.layout[index];
 				const rowHeight = this.rowHeight, numCols = this.numCols, margin = this.margin;
 				const el = createElement('vue-grid-item',
 					{
@@ -376,17 +361,17 @@ export default {
 						key: this.items[index].key,
 						on: {
 							requestHeight(height) {
-								props.minH = props.maxH = (height <= rowHeight) ? 1 : Math.ceil((margin[1] + height) / (rowHeight + margin[1]));
-								if (layout.h != props.minH) {
-									layout.h = props.minH;
+								layout.minH = layout.maxH = (height <= rowHeight) ? 1 : Math.ceil((margin[1] + height) / (rowHeight + margin[1]));
+								if (layout.h != layout.minH) {
+									layout.h = layout.minH;
 									gridLayout.componentInstance.layoutUpdate();
 								}
 							},
 							requestWidth(width) {
 								const colWidth = gridLayout.componentInstance.width / numCols;
-								props.minW = props.maxW = (width <= colWidth) ? 1 : Math.ceil((margin[0] + width) / (colWidth + margin[0]));
-								if (layout.w != props.minH) {
-									layout.w = props.minW;
+								layout.minW = layout.maxW = (width <= colWidth) ? 1 : Math.ceil((margin[0] + width) / (colWidth + margin[0]));
+								if (layout.w != layout.minH) {
+									layout.w = layout.minW;
 									gridLayout.componentInstance.layoutUpdate();
 								}
 							}
@@ -395,7 +380,7 @@ export default {
 							blur(e) { el.context.selectElement(null); },
 							focus(e) { el.context.selectElement(el.componentInstance); }
 						},
-						props,
+						props: layout,
 						style: (layout.w + layout.h == 0) ? { display: "none" } : {}
 					},
 					[

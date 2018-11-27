@@ -15020,7 +15020,6 @@ var vue_grid_layout_common_default = /*#__PURE__*/__webpack_require__.n(vue_grid
 
 
 var breakpoints = ["xs", "sm", "md", "lg", "xl"];
-var inheritedGridItemProperties = ["minW", "minH", "maxW", "maxH"];
 var itemsToAdd = []; // Get the requested size from an object or the closest fallback option
 
 function getDescriptor(item, size) {
@@ -15176,7 +15175,11 @@ function getDescriptor(item, size) {
           y: descriptor[1],
           w: descriptor[2],
           h: descriptor[3],
-          i: this.layouts[size].length
+          i: this.layouts[size].length,
+          minW: 1,
+          maxW: Infinity,
+          minH: 1,
+          maxH: Infinity
         });
       }, this);
       itemsToAdd.push({
@@ -15248,11 +15251,6 @@ function getDescriptor(item, size) {
           var descriptor = this.layouts[size][index];
           item.layouts[size] = [descriptor.x, descriptor.y, descriptor.w, descriptor.h];
         }, this);
-        inheritedGridItemProperties.forEach(function (prop) {
-          if (gridItem.componentOptions.propsData.hasOwnProperty(prop)) {
-            item.layouts[prop] = gridItem.componentOptions.propsData[prop];
-          }
-        });
 
         if (child.componentOptions.propsData !== undefined) {
           item.childProps = child.componentOptions.propsData;
@@ -15290,7 +15288,11 @@ function getDescriptor(item, size) {
           y: descriptor[1],
           w: descriptor[2],
           h: descriptor[3],
-          i: index
+          i: index,
+          minW: slot.componentOptions.propsData.minW || 1,
+          maxW: slot.componentOptions.propsData.maxW || Infinity,
+          minH: slot.componentOptions.propsData.minH || 1,
+          maxH: slot.componentOptions.propsData.maxH || Infinity
         });
       }, this);
       this.gridItems.push(slot);
@@ -15341,25 +15343,9 @@ function getDescriptor(item, size) {
         useCssTransforms: false
       }
     }, this.gridItems.map(function (gridItem, index) {
-      // Bind layout values and inherit layout properties
-      var layout = this.layout[index];
-      var props = {
-        x: layout.x,
-        y: layout.y,
-        w: layout.w,
-        h: layout.h,
-        i: index
-      };
-      var gridItemProps = gridItem.componentOptions.propsData;
-
-      for (var key in gridItemProps) {
-        if (inheritedGridItemProperties.indexOf(key) != -1) {
-          props[key] = gridItemProps[key];
-        }
-      } // Render replacement for virtual grid item component
-
-
-      var item = this.items[index];
+      // Render replacement for virtual grid item component
+      var item = this.items[index],
+          layout = this.layout[index];
       var rowHeight = this.rowHeight,
           numCols = this.numCols,
           margin = this.margin;
@@ -15370,19 +15356,19 @@ function getDescriptor(item, size) {
         key: this.items[index].key,
         on: {
           requestHeight: function requestHeight(height) {
-            props.minH = props.maxH = height <= rowHeight ? 1 : Math.ceil((margin[1] + height) / (rowHeight + margin[1]));
+            layout.minH = layout.maxH = height <= rowHeight ? 1 : Math.ceil((margin[1] + height) / (rowHeight + margin[1]));
 
-            if (layout.h != props.minH) {
-              layout.h = props.minH;
+            if (layout.h != layout.minH) {
+              layout.h = layout.minH;
               gridLayout.componentInstance.layoutUpdate();
             }
           },
           requestWidth: function requestWidth(width) {
             var colWidth = gridLayout.componentInstance.width / numCols;
-            props.minW = props.maxW = width <= colWidth ? 1 : Math.ceil((margin[0] + width) / (colWidth + margin[0]));
+            layout.minW = layout.maxW = width <= colWidth ? 1 : Math.ceil((margin[0] + width) / (colWidth + margin[0]));
 
-            if (layout.w != props.minH) {
-              layout.w = props.minW;
+            if (layout.w != layout.minH) {
+              layout.w = layout.minW;
               gridLayout.componentInstance.layoutUpdate();
             }
           }
@@ -15395,7 +15381,7 @@ function getDescriptor(item, size) {
             el.context.selectElement(el.componentInstance);
           }
         },
-        props: props,
+        props: layout,
         style: layout.w + layout.h == 0 ? {
           display: "none"
         } : {}
