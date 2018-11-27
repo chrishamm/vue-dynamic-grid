@@ -14969,9 +14969,6 @@ if (typeof window !== 'undefined') {
 var external_commonjs_vue_commonjs2_vue_root_Vue_ = __webpack_require__("8bbf");
 var external_commonjs_vue_commonjs2_vue_root_Vue_default = /*#__PURE__*/__webpack_require__.n(external_commonjs_vue_commonjs2_vue_root_Vue_);
 
-// EXTERNAL MODULE: ./node_modules/core-js/modules/es6.array.index-of.js
-var es6_array_index_of = __webpack_require__("57e7");
-
 // EXTERNAL MODULE: ./node_modules/core-js/modules/es6.array.map.js
 var es6_array_map = __webpack_require__("6d67");
 
@@ -14983,6 +14980,9 @@ var es6_array_for_each = __webpack_require__("f3e2");
 
 // EXTERNAL MODULE: ./node_modules/core-js/modules/es6.number.constructor.js
 var es6_number_constructor = __webpack_require__("c5f6");
+
+// EXTERNAL MODULE: ./node_modules/core-js/modules/es6.array.index-of.js
+var es6_array_index_of = __webpack_require__("57e7");
 
 // EXTERNAL MODULE: ./node_modules/vue-grid-layout/dist/vue-grid-layout.common.js
 var vue_grid_layout_common = __webpack_require__("7be8");
@@ -15030,7 +15030,7 @@ var vue_grid_layout_common_default = /*#__PURE__*/__webpack_require__.n(vue_grid
 
 var breakpoints = ["xs", "sm", "md", "lg", "xl"];
 var inheritedGridItemProperties = ["minW", "minH", "maxW", "maxH"];
-var itemsToAdd = []; // Get the requested size from an object or at least a deserialized fallback option
+var itemsToAdd = []; // Get the requested size from an object or the closest fallback option
 
 function getDescriptor(item, size) {
   var value;
@@ -15039,10 +15039,39 @@ function getDescriptor(item, size) {
     value = item[size];
   } else if (item.hasOwnProperty("fallback")) {
     value = item.fallback;
-  } else if (item.hasOwnProperty("md")) {
-    value = item.md;
   } else {
-    throw "Descriptor not found";
+    var index = breakpoints.indexOf(size);
+
+    if (index == -1) {
+      throw "Invalid breakpoint";
+    }
+
+    var lastBreakpoint = 'md';
+    var mdIndex = breakpoints.indexOf('md');
+
+    if (index >= mdIndex) {
+      for (var i = breakpoints.length; i > mdIndex; i--) {
+        var breakpoint = breakpoints[i];
+
+        if (item.hasOwnProperty(breakpoint)) {
+          lastBreakpoint = breakpoint;
+        }
+      }
+    } else {
+      for (var _i = 0; _i < breakpoints.length; _i++) {
+        var _breakpoint = breakpoints[_i];
+
+        if (item.hasOwnProperty(_breakpoint)) {
+          lastBreakpoint = _breakpoint;
+        }
+      }
+    }
+
+    if (!item.hasOwnProperty(lastBreakpoint)) {
+      throw 'No breakpoint descriptor found';
+    }
+
+    return item[lastBreakpoint];
   }
 
   if (value == "hidden") {
@@ -15102,6 +15131,12 @@ function getDescriptor(item, size) {
       type: Boolean,
       default: false
     },
+    margin: {
+      type: Array,
+      default: function _default() {
+        return [10, 10];
+      }
+    },
     numCols: {
       type: Number,
       default: 24
@@ -15109,6 +15144,10 @@ function getDescriptor(item, size) {
     responsive: {
       type: Boolean,
       default: true
+    },
+    rowHeight: {
+      type: Number,
+      default: 15
     },
     size: {
       type: String,
@@ -15299,15 +15338,15 @@ function getDescriptor(item, size) {
     }, this);
     itemsToAdd = []; // Render everything
 
-    return createElement('vue-grid-layout', {
+    var gridLayout = createElement('vue-grid-layout', {
       props: {
         layout: this.layout,
         colNum: this.numCols,
-        rowHeight: 15,
+        rowHeight: this.rowHeight,
         isDraggable: this.editing,
         isResizable: this.editing,
         verticalCompact: true,
-        margin: [10, 10],
+        margin: this.margin,
         useCssTransforms: false
       }
     }, this.gridItems.map(function (gridItem, index) {
@@ -15330,11 +15369,33 @@ function getDescriptor(item, size) {
 
 
       var item = this.items[index];
+      var rowHeight = this.rowHeight,
+          numCols = this.numCols,
+          margin = this.margin;
       var el = createElement('vue-grid-item', {
         attrs: this.editing ? {
           tabIndex: index + 1
         } : {},
         key: this.items[index].key,
+        on: {
+          requestHeight: function requestHeight(height) {
+            props.minH = props.maxH = height <= rowHeight ? 1 : Math.ceil((margin[1] + height) / (rowHeight + margin[1]));
+
+            if (layout.h != props.minH) {
+              layout.h = props.minH;
+              gridLayout.componentInstance.layoutUpdate();
+            }
+          },
+          requestWidth: function requestWidth(width) {
+            var colWidth = gridLayout.componentInstance.width / numCols;
+            props.minW = props.maxW = width <= colWidth ? 1 : Math.ceil((margin[0] + width) / (colWidth + margin[0]));
+
+            if (layout.w != props.minH) {
+              layout.w = props.minW;
+              gridLayout.componentInstance.layoutUpdate();
+            }
+          }
+        },
         nativeOn: {
           blur: function blur(e) {
             el.context.selectElement(null);
@@ -15380,6 +15441,7 @@ function getDescriptor(item, size) {
 
       return el;
     }, this));
+    return gridLayout;
   }
 });
 // CONCATENATED MODULE: ./src/components/DynamicGrid.vue?vue&type=script&lang=js&

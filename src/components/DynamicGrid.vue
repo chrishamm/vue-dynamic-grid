@@ -39,17 +39,41 @@ const inheritedGridItemProperties = ["minW", "minH", "maxW", "maxH"];
 
 let itemsToAdd = [];
 
-// Get the requested size from an object or at least a deserialized fallback option
+// Get the requested size from an object or the closest fallback option
 function getDescriptor(item, size) {
 	let value;
 	if (item.hasOwnProperty(size)) {
 		value = item[size];
 	} else if (item.hasOwnProperty("fallback")) {
 		value = item.fallback;
-	} else if (item.hasOwnProperty("md")) {
-		value = item.md;
 	} else {
-		throw "Descriptor not found";
+		const index = breakpoints.indexOf(size);
+		if (index == -1) {
+			throw "Invalid breakpoint";
+		}
+
+		let lastBreakpoint = 'md';
+		const mdIndex = breakpoints.indexOf('md');
+		if (index >= mdIndex) {
+			for(let i = breakpoints.length; i > mdIndex; i--) {
+				const breakpoint = breakpoints[i];
+				if (item.hasOwnProperty(breakpoint)) {
+					lastBreakpoint = breakpoint;
+				}
+			}
+		} else {
+			for(let i = 0; i < breakpoints.length; i++) {
+				const breakpoint = breakpoints[i];
+				if (item.hasOwnProperty(breakpoint)) {
+					lastBreakpoint = breakpoint;
+				}
+			}
+		}
+
+		if (!item.hasOwnProperty(lastBreakpoint)) {
+			throw 'No breakpoint descriptor found';
+		}
+		return item[lastBreakpoint];
 	}
 
 	if (value == "hidden") {
@@ -105,6 +129,10 @@ export default {
 			type: Boolean,
 			default: false
 		},
+		margin: {
+			type: Array,
+			default: () => [10, 10]
+		},
 		numCols: {
 			type: Number,
 			default: 24
@@ -112,6 +140,10 @@ export default {
 		responsive: {
 			type: Boolean,
 			default: true
+		},
+		rowHeight: {
+			type: Number,
+			default: 15
 		},
 		size: {
 			type: String,
@@ -304,16 +336,16 @@ export default {
 		itemsToAdd = [];
 
 		// Render everything
-		return createElement('vue-grid-layout',
+		const gridLayout = createElement('vue-grid-layout',
 			{
 				props: {
 					layout: this.layout,
 					colNum: this.numCols,
-					rowHeight: 15,
+					rowHeight: this.rowHeight,
 					isDraggable: this.editing,
 					isResizable: this.editing,
 					verticalCompact: true,
-					margin: [10, 10],
+					margin: this.margin,
 					useCssTransforms: false
 				},
 			},
@@ -337,10 +369,28 @@ export default {
 
 				// Render replacement for virtual grid item component
 				const item = this.items[index];
+				const rowHeight = this.rowHeight, numCols = this.numCols, margin = this.margin;
 				const el = createElement('vue-grid-item',
 					{
 						attrs: this.editing ? { tabIndex: (index + 1) } : {},
 						key: this.items[index].key,
+						on: {
+							requestHeight(height) {
+								props.minH = props.maxH = (height <= rowHeight) ? 1 : Math.ceil((margin[1] + height) / (rowHeight + margin[1]));
+								if (layout.h != props.minH) {
+									layout.h = props.minH;
+									gridLayout.componentInstance.layoutUpdate();
+								}
+							},
+							requestWidth(width) {
+								const colWidth = gridLayout.componentInstance.width / numCols;
+								props.minW = props.maxW = (width <= colWidth) ? 1 : Math.ceil((margin[0] + width) / (colWidth + margin[0]));
+								if (layout.w != props.minH) {
+									layout.w = props.minW;
+									gridLayout.componentInstance.layoutUpdate();
+								}
+							}
+						},
 						nativeOn: {
 							blur(e) { el.context.selectElement(null); },
 							focus(e) { el.context.selectElement(el.componentInstance); }
@@ -381,6 +431,7 @@ export default {
 				return el;
 			}, this)
 		);
+		return gridLayout;
 	}
 }
 </script>
