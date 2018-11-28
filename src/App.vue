@@ -56,6 +56,12 @@
 					<!-- Components must remain empty if save+load are supposted to be used. We don't support recursive reconstruction, so use settings+props instead -->
 				</dummy-div>
 			</dynamic-grid-item>
+
+			<dynamic-grid-item :md="[0, 4, 8, 4]" settings="created via static template">
+				<dummy-div>
+					<!-- See above -->
+				</dummy-div>
+			</dynamic-grid-item>
 		</dynamic-grid>
 	</div>
 </template>

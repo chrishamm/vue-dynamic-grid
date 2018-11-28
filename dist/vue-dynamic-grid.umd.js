@@ -15290,26 +15290,32 @@ function getDescriptor(item, size) {
   beforeMount: function beforeMount() {
     // Add missing layout entries for each slot
     this.$slots.default.forEach(function (slot, index) {
-      breakpoints.forEach(function (size) {
-        var descriptor = getDescriptor(slot.componentOptions.propsData, size);
-        this.layouts[size].push({
-          x: descriptor[0],
-          y: descriptor[1],
-          w: descriptor[2],
-          h: descriptor[3],
-          i: index,
-          minW: slot.componentOptions.propsData.minW || 1,
-          maxW: slot.componentOptions.propsData.maxW || Infinity,
-          minH: slot.componentOptions.propsData.minH || 1,
-          maxH: slot.componentOptions.propsData.maxH || Infinity
-        });
-      }, this);
-      this.gridItems.push(slot);
-      this.items.push({
-        key: this.itemKey++,
-        settings: slot.componentOptions.propsData.settings,
-        settingsLoaded: false
-      });
+      if (slot.componentOptions !== undefined) {
+        if (slot.componentOptions.propsData === undefined) {
+          console.warn('[DynamicGrid] Attempted to add element without size descriptors, skipped');
+        } else {
+          breakpoints.forEach(function (size) {
+            var descriptor = getDescriptor(slot.componentOptions.propsData, size);
+            this.layouts[size].push({
+              x: descriptor[0],
+              y: descriptor[1],
+              w: descriptor[2],
+              h: descriptor[3],
+              i: index,
+              minW: slot.componentOptions.propsData.minW || 1,
+              maxW: slot.componentOptions.propsData.maxW || Infinity,
+              minH: slot.componentOptions.propsData.minH || 1,
+              maxH: slot.componentOptions.propsData.maxH || Infinity
+            });
+          }, this);
+          this.gridItems.push(slot);
+          this.items.push({
+            key: this.itemKey++,
+            settings: slot.componentOptions.propsData.settings,
+            settingsLoaded: false
+          });
+        }
+      }
     }, this); // Make sure this component becomes responsive. See Bootstrap 4 breakpoints for further information.
     // Unfortunately we cannot use the "responsive" prop of the GridLayout because that is too buggy
 

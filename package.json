@@ -1,7 +1,7 @@
 {
 	"name": "vue-dynamic-grid",
 	"description": "Enhanced grid layout component based on vue-grid-layout",
-	"version": "1.0.4",
+	"version": "1.0.5",
 	"author": "Christian Hammacher <bmasterc@gmail.com>",
 	"license": "MIT",
 	"keywords": [
