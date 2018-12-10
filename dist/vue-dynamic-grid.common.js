@@ -14427,7 +14427,7 @@ exports = module.exports = __webpack_require__("2350")(false);
 
 
 // module
-exports.push([module.i, "\n.vue-grid-item>*{height:100%;width:100%\n}\n.vue-grid-item:focus{background-color:red\n}\n.vue-grid-item:focus>*{opacity:.8\n}\n.vue-grid-item.vue-resizable>*{pointer-events:none\n}\n.vue-grid-item>.close-icon{top:3px;box-sizing:border-box;cursor:pointer;height:12px;padding:0 3px 3px 0;pointer-events:all;position:absolute;right:0;width:12px;z-index:1\n}\n.vue-grid-item.vue-resizable>span.vue-resizable-handle{pointer-events:all\n}", ""]);
+exports.push([module.i, "\n.vue-grid-item>*{height:100%;width:100%\n}\n.vue-grid-item:focus{background-color:red\n}\n.vue-grid-item:focus>*{opacity:.8\n}\n.vue-grid-item.vue-resizable>*{pointer-events:none\n}\n.vue-grid-item>.close-icon{top:3px;box-sizing:border-box;cursor:pointer;height:12px;padding:0 3px 3px 0;position:absolute;right:0;width:12px\n}\n.vue-grid-item.vue-resizable>span.vue-resizable-handle,.vue-grid-item>.close-icon{pointer-events:all;z-index:1\n}", ""]);
 
 // exports
 
@@ -14980,6 +14980,7 @@ var vue_grid_layout_common = __webpack_require__("7be8");
 var vue_grid_layout_common_default = /*#__PURE__*/__webpack_require__.n(vue_grid_layout_common);
 
 // CONCATENATED MODULE: ./node_modules/cache-loader/dist/cjs.js??ref--12-0!./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/cache-loader/dist/cjs.js??ref--0-0!./node_modules/vue-loader/lib??vue-loader-options!./src/components/DynamicGrid.vue?vue&type=script&lang=js&
+//
 //
 //
 //

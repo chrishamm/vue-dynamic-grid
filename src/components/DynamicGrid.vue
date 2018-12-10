@@ -26,6 +26,7 @@
 }
 .vue-grid-item.vue-resizable > span.vue-resizable-handle {
 	pointer-events: all;
+	z-index: 1;
 }
 </style>
 
